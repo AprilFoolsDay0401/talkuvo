@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useState, createContext, useContext } from "react";
+import {
+  useEffect,
+  useState,
+  createContext,
+  useContext,
+  useCallback,
+  useMemo,
+} from "react";
 import { supabase } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
 
@@ -78,6 +85,224 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // fetchProfile 함수를 useCallback으로 메모이제이션
+  const fetchProfile = useCallback(async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .single();
+
+      if (error) {
+        if (error.code === "PGRST116") {
+          return await createProfile(userId);
+        }
+        throw error;
+      }
+
+      setProfile(data);
+      return data;
+    } catch (error) {
+      const authError = getErrorMessage(error);
+      console.error("프로필 조회 실패:", {
+        userId,
+        error: authError.message,
+        code: authError.code,
+        timestamp: new Date().toISOString(),
+      });
+
+      // 에러가 발생해도 앱이 크래시되지 않도록 처리
+      if (authError.code === "PGRST116") {
+        // 프로필이 없는 경우 새로 생성 시도
+        try {
+          return await createProfile(userId);
+        } catch (createError) {
+          console.error("프로필 생성 실패:", createError);
+          return null;
+        }
+      }
+
+      return null;
+    }
+  }, []); // 의존성 없음 (함수 내부에서 외부 상태를 직접 참조하지 않음)
+
+  // createProfile 함수를 useCallback으로 메모이제이션
+  const createProfile = useCallback(async (userId: string) => {
+    try {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError || !user) {
+        throw new Error("User not found or error fetching user");
+      }
+
+      // 간단한 사용자명 생성 (이메일 앞부분 사용)
+      const emailPrefix = user.email?.split("@")[0] || "user";
+      const username = emailPrefix;
+
+      const profileData = {
+        id: userId,
+        username: username,
+        email: user.email,
+        full_name:
+          user.user_metadata?.full_name || user.user_metadata?.name || "",
+        avatar_url: user.user_metadata?.avatar_url || "",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      // upsert로 프로필 생성 또는 업데이트
+      const { data, error } = await supabase
+        .from("profiles")
+        .upsert(profileData, {
+          onConflict: "id",
+          ignoreDuplicates: false,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      setProfile(data);
+      return data;
+    } catch (error) {
+      const authError = getErrorMessage(error);
+      console.error("프로필 생성 실패:", {
+        userId,
+        error: authError.message,
+        code: authError.code,
+        timestamp: new Date().toISOString(),
+      });
+      throw error;
+    }
+  }, []); // 의존성 없음
+
+  // updateProfile 함수를 useCallback으로 메모이제이션
+  const updateProfile = useCallback(
+    async (updates: Partial<Profile>) => {
+      if (!user) {
+        const error: AuthError = {
+          code: "NOT_AUTHENTICATED",
+          message: "User not authenticated",
+          userMessage: "로그인이 필요합니다.",
+        };
+        return { error };
+      }
+
+      try {
+        console.log("프로필 업데이트 시작:", { updates, userId: user.id });
+
+        const { data, error } = await supabase
+          .from("profiles")
+          .update({
+            ...updates,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", user.id)
+          .select()
+          .single();
+
+        if (error) {
+          const authError = getErrorMessage(error);
+          console.error("프로필 업데이트 실패:", {
+            userId: user.id,
+            updates,
+            error: authError.message,
+            code: authError.code,
+            timestamp: new Date().toISOString(),
+          });
+          return { error: authError };
+        }
+
+        console.log("프로필 업데이트 성공:", data);
+
+        // 프로필 업데이트 후 자동으로 새로고침
+        setProfile(data);
+
+        // 추가로 최신 프로필 정보를 다시 가져오기
+        await fetchProfile(user.id);
+
+        return { data };
+      } catch (error) {
+        const authError = getErrorMessage(error);
+        console.error("프로필 업데이트 예외 발생:", {
+          userId: user.id,
+          updates,
+          error: authError.message,
+          code: authError.code,
+          timestamp: new Date().toISOString(),
+        });
+        return { error: authError };
+      }
+    },
+    [user, fetchProfile]
+  ); // user와 fetchProfile이 변경될 때만 재생성
+
+  // signInWithGoogle 함수를 useCallback으로 메모이제이션
+  const signInWithGoogle = useCallback(async () => {
+    try {
+      await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+    } catch (error) {
+      const authError = getErrorMessage(error);
+      console.error("Google 로그인 실패:", {
+        error: authError.message,
+        code: authError.code,
+        timestamp: new Date().toISOString(),
+      });
+      throw error;
+    }
+  }, []); // 의존성 없음
+
+  // logout 함수를 useCallback으로 메모이제이션
+  const logout = useCallback(async () => {
+    try {
+      // 1. Supabase에서 로그아웃
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        const authError = getErrorMessage(error);
+        console.error("로그아웃 실패:", {
+          error: authError.message,
+          code: authError.code,
+          timestamp: new Date().toISOString(),
+        });
+        // 에러가 발생해도 로컬 상태는 초기화
+      }
+
+      // 2. 로컬 상태 초기화
+      setUser(null);
+      setProfile(null);
+
+      // 3. 메인 페이지로 이동 (window.location 사용)
+      if (typeof window !== "undefined") {
+        window.location.href = "/";
+      }
+    } catch (error) {
+      const authError = getErrorMessage(error);
+      console.error("로그아웃 예외 발생:", {
+        error: authError.message,
+        code: authError.code,
+        timestamp: new Date().toISOString(),
+      });
+
+      // 에러가 발생해도 로컬 상태는 초기화하고 페이지 이동
+      setUser(null);
+      setProfile(null);
+      if (typeof window !== "undefined") {
+        window.location.href = "/";
+      }
+    }
+  }, []); // 의존성 없음
+
   // 기존 useAuth 로직을 여기로 이동
   useEffect(() => {
     // 초기 세션 확인
@@ -134,232 +359,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [fetchProfile]); // fetchProfile을 의존성으로 추가
 
-  const fetchProfile = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", userId)
-        .single();
+  // isAuthenticated 계산 결과를 useMemo로 메모이제이션
+  const isAuthenticated = useMemo(() => !!user, [user]);
 
-      if (error) {
-        if (error.code === "PGRST116") {
-          return await createProfile(userId);
-        }
-        throw error;
-      }
-
-      setProfile(data);
-      return data;
-    } catch (error) {
-      const authError = getErrorMessage(error);
-      console.error("프로필 조회 실패:", {
-        userId,
-        error: authError.message,
-        code: authError.code,
-        timestamp: new Date().toISOString(),
-      });
-
-      // 에러가 발생해도 앱이 크래시되지 않도록 처리
-      if (authError.code === "PGRST116") {
-        // 프로필이 없는 경우 새로 생성 시도
-        try {
-          return await createProfile(userId);
-        } catch (createError) {
-          console.error("프로필 생성 실패:", createError);
-          return null;
-        }
-      }
-
-      return null;
-    }
-  };
-
-  const createProfile = async (userId: string) => {
-    try {
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-
-      if (userError || !user) {
-        throw new Error("User not found or error fetching user");
-      }
-
-      // 간단한 사용자명 생성 (이메일 앞부분 사용)
-      const emailPrefix = user.email?.split("@")[0] || "user";
-      const username = emailPrefix;
-
-      const profileData = {
-        id: userId,
-        username: username,
-        email: user.email,
-        full_name:
-          user.user_metadata?.full_name || user.user_metadata?.name || "",
-        avatar_url: user.user_metadata?.avatar_url || "",
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-
-      // upsert로 프로필 생성 또는 업데이트
-      const { data, error } = await supabase
-        .from("profiles")
-        .upsert(profileData, {
-          onConflict: "id",
-          ignoreDuplicates: false,
-        })
-        .select()
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      setProfile(data);
-      return data;
-    } catch (error) {
-      const authError = getErrorMessage(error);
-      console.error("프로필 생성 실패:", {
-        userId,
-        error: authError.message,
-        code: authError.code,
-        timestamp: new Date().toISOString(),
-      });
-      throw error;
-    }
-  };
-
-  const updateProfile = async (updates: Partial<Profile>) => {
-    if (!user) {
-      const error: AuthError = {
-        code: "NOT_AUTHENTICATED",
-        message: "User not authenticated",
-        userMessage: "로그인이 필요합니다.",
-      };
-      return { error };
-    }
-
-    try {
-      console.log("프로필 업데이트 시작:", { updates, userId: user.id });
-
-      const { data, error } = await supabase
-        .from("profiles")
-        .update({
-          ...updates,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", user.id)
-        .select()
-        .single();
-
-      if (error) {
-        const authError = getErrorMessage(error);
-        console.error("프로필 업데이트 실패:", {
-          userId: user.id,
-          updates,
-          error: authError.message,
-          code: authError.code,
-          timestamp: new Date().toISOString(),
-        });
-        return { error: authError };
-      }
-
-      console.log("프로필 업데이트 성공:", data);
-
-      // 프로필 업데이트 후 자동으로 새로고침
-      setProfile(data);
-
-      // 추가로 최신 프로필 정보를 다시 가져오기
-      await fetchProfile(user.id);
-
-      return { data };
-    } catch (error) {
-      const authError = getErrorMessage(error);
-      console.error("프로필 업데이트 예외 발생:", {
-        userId: user.id,
-        updates,
-        error: authError.message,
-        code: authError.code,
-        timestamp: new Date().toISOString(),
-      });
-      return { error: authError };
-    }
-  };
-
-  const signInWithGoogle = async () => {
-    try {
-      await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-    } catch (error) {
-      const authError = getErrorMessage(error);
-      console.error("Google 로그인 실패:", {
-        error: authError.message,
-        code: authError.code,
-        timestamp: new Date().toISOString(),
-      });
-      throw error;
-    }
-  };
-
-  const logout = async () => {
-    try {
-      // 1. Supabase에서 로그아웃
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        const authError = getErrorMessage(error);
-        console.error("로그아웃 실패:", {
-          error: authError.message,
-          code: authError.code,
-          timestamp: new Date().toISOString(),
-        });
-        // 에러가 발생해도 로컬 상태는 초기화
-      }
-
-      // 2. 로컬 상태 초기화
-      setUser(null);
-      setProfile(null);
-
-      // 3. 메인 페이지로 이동 (window.location 사용)
-      if (typeof window !== "undefined") {
-        window.location.href = "/";
-      }
-    } catch (error) {
-      const authError = getErrorMessage(error);
-      console.error("로그아웃 예외 발생:", {
-        error: authError.message,
-        code: authError.code,
-        timestamp: new Date().toISOString(),
-      });
-
-      // 에러가 발생해도 로컬 상태는 초기화하고 페이지 이동
-      setUser(null);
-      setProfile(null);
-      if (typeof window !== "undefined") {
-        window.location.href = "/";
-      }
-    }
-  };
+  // Context value를 useMemo로 메모이제이션
+  const contextValue = useMemo(
+    () => ({
+      user,
+      profile,
+      loading,
+      signInWithGoogle,
+      logout,
+      updateProfile,
+      isAuthenticated,
+    }),
+    [
+      user,
+      profile,
+      loading,
+      signInWithGoogle,
+      logout,
+      updateProfile,
+      isAuthenticated,
+    ]
+  );
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        profile,
-        loading,
-        signInWithGoogle,
-        logout,
-        updateProfile,
-        isAuthenticated: !!user,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
   );
 }
 
