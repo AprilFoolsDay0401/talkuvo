@@ -1,103 +1,239 @@
-import Image from "next/image";
+import Link from "next/link";
+import {
+  TrendingUp,
+  Users,
+  MessageSquare,
+  ArrowUp,
+  ArrowDown,
+} from "lucide-react";
+import { Button } from "@/components/ui/Button";
 
-export default function Home() {
+// 임시 데이터 (나중에 Supabase에서 가져올 예정)
+const mockCommunities = [
+  {
+    id: "1",
+    name: "programming",
+    description: "프로그래밍에 관한 모든 것",
+    memberCount: 12500,
+    postCount: 8900,
+    avatarUrl: null,
+  },
+  {
+    id: "2",
+    name: "korea",
+    description: "한국에 관한 이야기",
+    memberCount: 8900,
+    postCount: 5600,
+    avatarUrl: null,
+  },
+  {
+    id: "3",
+    name: "technology",
+    description: "최신 기술 트렌드",
+    memberCount: 15600,
+    postCount: 12300,
+    avatarUrl: null,
+  },
+  {
+    id: "4",
+    name: "food",
+    description: "맛있는 음식 이야기",
+    memberCount: 7800,
+    postCount: 4500,
+    avatarUrl: null,
+  },
+];
+
+const mockPosts = [
+  {
+    id: "1",
+    title: "Next.js 15의 새로운 기능들",
+    content: "Next.js 15에서 추가된 새로운 기능들을 정리해보았습니다...",
+    author: "dev_user",
+    community: "programming",
+    upvotes: 156,
+    downvotes: 12,
+    commentCount: 23,
+    createdAt: "2시간 전",
+    postType: "text" as const,
+  },
+  {
+    id: "2",
+    title: "한국의 전통 음식 문화",
+    content: "한국의 전통 음식 문화에 대해 알아보겠습니다...",
+    author: "foodie_kr",
+    community: "food",
+    upvotes: 89,
+    downvotes: 5,
+    commentCount: 15,
+    createdAt: "4시간 전",
+    postType: "text" as const,
+  },
+  {
+    id: "3",
+    title: "AI 기술의 미래",
+    content: "인공지능 기술이 우리 삶을 어떻게 바꿀 것인지...",
+    author: "tech_enthusiast",
+    community: "technology",
+    upvotes: 234,
+    downvotes: 18,
+    commentCount: 45,
+    createdAt: "6시간 전",
+    postType: "text" as const,
+  },
+];
+
+export default function HomePage() {
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="max-w-6xl mx-auto">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Left Sidebar - 커뮤니티 목록 */}
+        <div className="lg:col-span-1">
+          <div className="bg-white rounded-lg border border-gray-200 p-4 sticky top-20">
+            <h2 className="text-lg font-semibold mb-4 flex items-center">
+              <TrendingUp className="w-5 h-5 mr-2 text-orange-500" />
+              인기 커뮤니티
+            </h2>
+            <div className="space-y-3">
+              {mockCommunities.map((community) => (
+                <Link
+                  key={community.id}
+                  href={`/c/${community.name}`}
+                  className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                    {community.name[0].toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      c/{community.name}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {community.memberCount.toLocaleString()}명
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+            <Button className="w-full mt-4" variant="outline">
+              커뮤니티 더 보기
+            </Button>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        {/* Main Content - 포스트 목록 */}
+        <div className="lg:col-span-2">
+          <div className="bg-white rounded-lg border border-gray-200">
+            {/* 포스트 생성 버튼 */}
+            <div className="p-4 border-b border-gray-200">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    placeholder="무엇을 이야기하고 싶으신가요?"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 포스트 목록 */}
+            <div className="divide-y divide-gray-200">
+              {mockPosts.map((post) => (
+                <div
+                  key={post.id}
+                  className="p-4 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex space-x-3">
+                    {/* 투표 버튼 */}
+                    <div className="flex flex-col items-center space-y-1">
+                      <button className="p-1 hover:bg-gray-100 rounded transition-colors">
+                        <ArrowUp className="w-5 h-5 text-gray-400 hover:text-orange-500" />
+                      </button>
+                      <span className="text-sm font-medium text-gray-900">
+                        {post.upvotes - post.downvotes}
+                      </span>
+                      <button className="p-1 hover:bg-gray-100 rounded transition-colors">
+                        <ArrowDown className="w-5 h-5 text-gray-400 hover:text-blue-500" />
+                      </button>
+                    </div>
+
+                    {/* 포스트 내용 */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-2 text-xs text-gray-500 mb-2">
+                        <Link
+                          href={`/c/${post.community}`}
+                          className="hover:underline"
+                        >
+                          c/{post.community}
+                        </Link>
+                        <span>•</span>
+                        <span>u/{post.author}</span>
+                        <span>•</span>
+                        <span>{post.createdAt}</span>
+                      </div>
+
+                      <Link href={`/post/${post.id}`}>
+                        <h3 className="text-lg font-medium text-gray-900 mb-2 hover:underline">
+                          {post.title}
+                        </h3>
+                        <p className="text-gray-700 text-sm line-clamp-3">
+                          {post.content}
+                        </p>
+                      </Link>
+
+                      <div className="flex items-center space-x-4 mt-3">
+                        <button className="flex items-center space-x-1 text-gray-500 hover:text-gray-700 transition-colors">
+                          <MessageSquare className="w-4 h-4" />
+                          <span className="text-sm">
+                            {post.commentCount} 댓글
+                          </span>
+                        </button>
+                        <button className="text-gray-500 hover:text-gray-700 transition-colors text-sm">
+                          공유
+                        </button>
+                        <button className="text-gray-500 hover:text-gray-700 transition-colors text-sm">
+                          저장
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Sidebar - 정보 및 광고 */}
+        <div className="lg:col-span-1">
+          <div className="bg-white rounded-lg border border-gray-200 p-4 sticky top-20">
+            <h3 className="text-lg font-semibold mb-4">TalkUvo 소개</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              TalkUvo는 다양한 주제에 대해 이야기하고 토론하는 커뮤니티
+              플랫폼입니다. 관심 있는 주제의 커뮤니티에 참여하고 의견을
+              나누어보세요.
+            </p>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-600">총 커뮤니티</span>
+                <span className="font-medium">1,234</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-600">총 사용자</span>
+                <span className="font-medium">45,678</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-600">오늘 포스트</span>
+                <span className="font-medium">567</span>
+              </div>
+            </div>
+
+            <Button className="w-full mt-4">커뮤니티 만들기</Button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
