@@ -74,7 +74,10 @@ export function ImageUpload({
           .from(bucketName)
           .getPublicUrl(filePath);
 
+        console.log("Storage 업로드 결과:", { data, urlData });
+
         if (urlData?.publicUrl) {
+          console.log("공개 URL 생성됨:", urlData.publicUrl);
           setPreviewUrl(urlData.publicUrl);
           onImageUploaded(urlData.publicUrl);
           setUploadProgress(100);

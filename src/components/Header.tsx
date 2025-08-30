@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/Button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/Avatar";
 import {
@@ -16,12 +16,10 @@ import {
 
 export function Header() {
   const router = useRouter();
-  const { user, profile, loading, signOut, isAuthenticated } = useAuth();
+  const { user, profile, loading, logout, isAuthenticated } = useAuth();
 
   const handleSignOut = async () => {
-    await signOut();
-    // 로그아웃 후 메인 페이지로 이동
-    router.push("/");
+    await logout(); // logout 함수가 모든 것을 처리 (로그아웃 + 페이지 이동)
   };
 
   const getInitials = (username: string) => {

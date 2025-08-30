@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/hooks/useToast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/Avatar";
@@ -50,7 +50,9 @@ export default function SettingsPage() {
   };
 
   const handleImageUploaded = (imageUrl: string) => {
+    console.log("이미지 업로드 완료:", imageUrl);
     setFormData((prev) => ({ ...prev, avatar_url: imageUrl }));
+    console.log("formData 업데이트됨:", { ...formData, avatar_url: imageUrl });
   };
 
   const handleImageRemoved = () => {
@@ -61,21 +63,31 @@ export default function SettingsPage() {
     e.preventDefault();
     setSaving(true);
 
+    console.log("폼 제출 시작, 현재 formData:", formData);
+
     try {
       // 프로필 업데이트 (사용자명 제외)
-      const result = await updateProfile({
+      const updateData = {
         full_name: formData.full_name,
         bio: formData.bio,
         avatar_url: formData.avatar_url,
-      });
+      };
+
+      console.log("업데이트할 데이터:", updateData);
+
+      const result = await updateProfile(updateData);
+
+      console.log("updateProfile 결과:", result);
 
       if (result.error) {
+        console.error("프로필 업데이트 에러:", result.error);
         toast({
           title: "프로필 업데이트 실패",
           description: result.error.message,
           variant: "destructive",
         });
       } else {
+        console.log("프로필 업데이트 성공:", result.data);
         toast({
           title: "프로필 업데이트 성공!",
           description: "프로필이 성공적으로 업데이트되었습니다.",
@@ -88,6 +100,7 @@ export default function SettingsPage() {
         }, 1000);
       }
     } catch (error) {
+      console.error("handleSubmit 에러:", error);
       toast({
         title: "오류 발생",
         description: "프로필 업데이트 중 오류가 발생했습니다.",
