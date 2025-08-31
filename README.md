@@ -1,42 +1,42 @@
 # TalkUvo 🗣️
 
-TalkUvo는 Reddit과 비슷한 커뮤니티 플랫폼입니다. 다양한 주제에 대해 이야기하고 토론할 수 있는 공간을 제공합니다.
+TalkUvo is a community platform similar to Reddit. It provides a space where people can discuss and debate various topics.
 
-## 🚀 기술 스택
+## 🚀 Tech Stack
 
 - **Frontend**: Next.js 15, TypeScript, Tailwind CSS
 - **Backend**: Supabase (Database, Authentication, Real-time)
 - **UI Components**: Radix UI, Lucide React
 - **State Management**: React Hooks
 
-## ✨ 주요 기능
+## ✨ Key Features
 
-- 🔐 사용자 인증 (회원가입/로그인)
-- 🏘️ 커뮤니티 생성 및 관리
-- 📝 포스트 작성 및 공유
-- 💬 댓글 시스템
-- 👍 투표 시스템 (좋아요/싫어요)
-- 🔍 검색 기능
-- 📱 반응형 디자인
+- 🔐 User Authentication (Sign up/Login)
+- 🏘️ Community Creation and Management
+- 📝 Post Creation and Sharing
+- 💬 Comment System
+- 👍 Voting System (Upvote/Downvote)
+- 🔍 Search Functionality
+- 📱 Responsive Design
 
-## 🛠️ 설치 및 실행
+## 🛠️ Installation & Setup
 
-### 1. 저장소 클론
+### 1. Clone Repository
 
 ```bash
 git clone <repository-url>
 cd talkuvo
 ```
 
-### 2. 의존성 설치
+### 2. Install Dependencies
 
 ```bash
 npm install
 ```
 
-### 3. 환경 변수 설정
+### 3. Environment Variables
 
-`.env.local` 파일을 생성하고 다음 내용을 추가하세요:
+Create a `.env.local` file and add the following content:
 
 ```env
 # Supabase Configuration
@@ -47,14 +47,14 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
-### 4. Supabase 프로젝트 설정
+### 4. Supabase Project Setup
 
-1. [Supabase](https://supabase.com)에서 새 프로젝트를 생성하세요
-2. 프로젝트 설정에서 URL과 anon key를 복사하여 환경 변수에 설정하세요
-3. 다음 SQL을 실행하여 데이터베이스 스키마를 생성하세요:
+1. Create a new project at [Supabase](https://supabase.com)
+2. Copy the project URL and anon key from project settings and set them in environment variables
+3. Run the following SQL to create the database schema:
 
 ```sql
--- 사용자 프로필 테이블
+-- User Profile Table
 CREATE TABLE profiles (
   id UUID REFERENCES auth.users(id) PRIMARY KEY,
   username TEXT UNIQUE NOT NULL,
@@ -65,7 +65,7 @@ CREATE TABLE profiles (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 커뮤니티 테이블
+-- Community Table
 CREATE TABLE communities (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT UNIQUE NOT NULL,
@@ -77,7 +77,7 @@ CREATE TABLE communities (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 포스트 테이블
+-- Post Table
 CREATE TABLE posts (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   title TEXT NOT NULL,
@@ -91,7 +91,7 @@ CREATE TABLE posts (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 댓글 테이블
+-- Comment Table
 CREATE TABLE comments (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   content TEXT NOT NULL,
@@ -102,7 +102,7 @@ CREATE TABLE comments (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 투표 테이블
+-- Vote Table
 CREATE TABLE votes (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) NOT NULL,
@@ -114,7 +114,7 @@ CREATE TABLE votes (
   UNIQUE(user_id, comment_id)
 );
 
--- 커뮤니티 멤버 테이블
+-- Community Members Table
 CREATE TABLE community_members (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) NOT NULL,
@@ -124,7 +124,7 @@ CREATE TABLE community_members (
   UNIQUE(user_id, community_id)
 );
 
--- RLS (Row Level Security) 활성화
+-- Enable RLS (Row Level Security)
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE communities ENABLE ROW LEVEL SECURITY;
 ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
@@ -132,58 +132,58 @@ ALTER TABLE comments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE votes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE community_members ENABLE ROW LEVEL SECURITY;
 
--- RLS 정책 설정 (예시)
+-- RLS Policy Setup (Example)
 CREATE POLICY "Users can view all profiles" ON profiles FOR SELECT USING (true);
 CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
 ```
 
-### 5. 개발 서버 실행
+### 5. Start Development Server
 
 ```bash
 npm run dev
 ```
 
-브라우저에서 [http://localhost:3000](http://localhost:3000)을 열어 확인하세요.
+Open [http://localhost:3000](http://localhost:3000) in your browser to see the result.
 
-## 📁 프로젝트 구조
+## 📁 Project Structure
 
 ```
 src/
 ├── app/                 # Next.js App Router
-│   ├── layout.tsx      # 루트 레이아웃
-│   ├── page.tsx        # 홈페이지
-│   └── globals.css     # 전역 스타일
-├── components/          # 재사용 가능한 컴포넌트
-│   ├── ui/             # 기본 UI 컴포넌트
-│   └── Header.tsx      # 헤더 컴포넌트
-├── hooks/               # 커스텀 훅
-│   ├── useAuth.ts      # 인증 훅
-│   └── useToast.ts     # 토스트 훅
-└── lib/                 # 유틸리티 및 설정
-    ├── supabase.ts     # Supabase 클라이언트
-    └── utils.ts        # 유틸리티 함수
+│   ├── layout.tsx      # Root Layout
+│   ├── page.tsx        # Homepage
+│   └── globals.css     # Global Styles
+├── components/          # Reusable Components
+│   ├── ui/             # Basic UI Components
+│   └── NavBar.tsx      # Navigation Bar Component
+├── hooks/               # Custom Hooks
+│   ├── useAuth.ts      # Authentication Hook
+│   └── useToast.ts     # Toast Hook
+└── lib/                 # Utilities & Configuration
+    ├── supabase.ts     # Supabase Client
+    └── utils.ts        # Utility Functions
 ```
 
-## 🎨 디자인 시스템
+## 🎨 Design System
 
-- **색상**: Orange (#f97316)를 메인 컬러로 사용
-- **타이포그래피**: Inter 폰트 사용
-- **컴포넌트**: Radix UI 기반의 접근성 높은 컴포넌트
-- **반응형**: 모바일 우선 반응형 디자인
+- **Colors**: Orange (#f97316) as the main color
+- **Typography**: Inter font
+- **Components**: High accessibility components based on Radix UI
+- **Responsive**: Mobile-first responsive design
 
-## 🔮 향후 계획
+## 🔮 Future Plans
 
-- [ ] 사용자 프로필 페이지
-- [ ] 커뮤니티 생성/관리 기능
-- [ ] 포스트 작성/편집 기능
-- [ ] 댓글 시스템
-- [ ] 투표 시스템
-- [ ] 검색 기능
-- [ ] 알림 시스템
-- [ ] 다크 모드
-- [ ] PWA 지원
+- [ ] User Profile Page
+- [ ] Community Creation/Management Features
+- [ ] Post Creation/Editing Features
+- [ ] Comment System
+- [ ] Voting System
+- [ ] Search Functionality
+- [ ] Notification System
+- [ ] Dark Mode
+- [ ] PWA Support
 
-## 🤝 기여하기
+## 🤝 Contributing
 
 1. Fork the Project
 2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
@@ -191,10 +191,10 @@ src/
 4. Push to the Branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## 📄 라이선스
+## 📄 License
 
-이 프로젝트는 MIT 라이선스 하에 배포됩니다. 자세한 내용은 `LICENSE` 파일을 참조하세요.
+This project is distributed under the MIT License. See the `LICENSE` file for details.
 
-## 📞 연락처
+## 📞 Contact
 
-프로젝트에 대한 질문이나 제안사항이 있으시면 이슈를 생성해 주세요.
+If you have any questions or suggestions about the project, please create an issue.

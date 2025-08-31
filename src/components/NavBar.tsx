@@ -59,14 +59,14 @@ export function NavBar() {
   return (
     <nav className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-14">
           {/* 로고 및 메인 네비게이션 */}
           <div className="flex items-center space-x-4 sm:space-x-6 lg:space-x-8">
             <Link href="/" className="flex items-center space-x-2 group">
-              <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center group-hover:bg-orange-600 transition-colors">
-                <span className="text-white font-bold text-lg">T</span>
+              <div className="w-7 h-7 bg-orange-500 rounded-lg flex items-center justify-center group-hover:bg-orange-600 transition-colors">
+                <span className="text-white font-bold text-base">T</span>
               </div>
-              <span className="text-lg sm:text-xl font-bold text-gray-900 group-hover:text-orange-600 transition-colors">
+              <span className="text-base sm:text-lg font-bold text-gray-900 group-hover:text-orange-600 transition-colors">
                 TalkUvo
               </span>
             </Link>
@@ -84,7 +84,7 @@ export function NavBar() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => setIsSearchFocused(true)}
                   onBlur={() => setIsSearchFocused(false)}
-                  className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-gray-50 hover:bg-white transition-colors"
+                  className="w-full pl-10 pr-10 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-gray-50 hover:bg-white transition-colors"
                 />
                 {searchQuery && (
                   <button
@@ -104,24 +104,24 @@ export function NavBar() {
             {/* 모바일 검색 아이콘 */}
             <button
               onClick={toggleMobileSearch}
-              className="md:hidden p-2 text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-full transition-all duration-200 hover:scale-110 cursor-pointer"
+              className="md:hidden p-1.5 text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-full transition-all duration-200 hover:scale-110 cursor-pointer"
             >
-              <Search className="w-5 h-5" />
+              <Search className="w-4 h-4" />
             </button>
 
             {loading ? (
-              <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
+              <div className="w-7 h-7 bg-gray-200 rounded-full animate-pulse"></div>
             ) : isAuthenticated && user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex items-center  hover:bg-gray-100 rounded-full p-2 transition-all duration-200 hover:scale-105 hover:shadow-md cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-300 focus:ring-offset-2 sm:space-x-2">
+                  <button className="flex items-center  hover:bg-gray-100 rounded-full p-1 transition-all duration-200 hover:scale-105 hover:shadow-md cursor-pointer focus:outline-none  sm:space-x-2">
                     <Avatar className="w-8 h-8">
                       <AvatarImage src={user.avatar_url || undefined} />
                       <AvatarFallback className="bg-orange-500 text-white text-sm font-medium">
                         {getInitials(user.username)}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="text-sm font-medium text-gray-700 hidden sm:block group-hover:text-gray-900 transition-colors">
+                    <span className="text-sm px-1 font-medium text-gray-700 hidden sm:block group-hover:text-gray-900 transition-colors">
                       {user.username}
                     </span>
                   </button>
