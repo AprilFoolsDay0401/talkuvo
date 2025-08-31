@@ -19,7 +19,14 @@ export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
-  const { signInWithGoogle } = useAuth(); // AuthContext에서 Google 로그인 함수 가져오기
+  const { signInWithGoogle, isAuthenticated, loading: authLoading } = useAuth(); // AuthContext에서 필요한 값들 가져오기
+
+  // 이미 로그인된 사용자는 메인 페이지로 리다이렉션
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      router.replace("/");
+    }
+  }, [isAuthenticated, authLoading, router]);
 
   // 회원가입 성공 메시지 표시
   const signupMessage = searchParams.get("message");
@@ -28,11 +35,11 @@ export default function LoginPage() {
     if (signupMessage === "signup_success") {
       try {
         toast({
-          title: "회원가입 완료! 🎉",
-          description: "이제 로그인하여 TalkUvo를 시작하세요.",
+          title: "Signup Complete! 🎉",
+          description: "Now sign in to start using TalkUvo.",
         });
       } catch (error) {
-        console.error("회원가입 성공 토스트 표시 중 에러:", error);
+        console.error("Error showing signup success toast:", error);
       }
     }
   }, [signupMessage, toast]);
@@ -41,13 +48,13 @@ export default function LoginPage() {
     const newErrors: Record<string, string> = {};
 
     if (!formData.email.trim()) {
-      newErrors.email = "이메일을 입력해주세요.";
+      newErrors.email = "Please enter your email.";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "올바른 이메일 형식을 입력해주세요.";
+      newErrors.email = "Please enter a valid email format.";
     }
 
     if (!formData.password) {
-      newErrors.password = "비밀번호를 입력해주세요.";
+      newErrors.password = "Please enter your password.";
     }
 
     setErrors(newErrors);
@@ -82,28 +89,28 @@ export default function LoginPage() {
       if (error) {
         if (error.message.includes("Invalid login credentials")) {
           setErrors({
-            email: "이메일 또는 비밀번호가 올바르지 않습니다.",
-            password: "이메일 또는 비밀번호가 올바르지 않습니다.",
+            email: "Invalid email or password.",
+            password: "Invalid email or password.",
           });
         } else {
           toast({
-            title: "로그인 실패",
+            title: "Login Failed",
             description: error.message,
             variant: "destructive",
           });
         }
       } else {
         toast({
-          title: "로그인 성공! 🎉",
-          description: "TalkUvo에 오신 것을 환영합니다!",
+          title: "Login Successful! 🎉",
+          description: "Welcome to TalkUvo!",
         });
-        // 홈페이지로 리다이렉트
+        // Redirect to homepage
         router.push("/");
       }
     } catch (error) {
       toast({
-        title: "오류 발생",
-        description: "로그인 중 오류가 발생했습니다. 다시 시도해주세요.",
+        title: "Error Occurred",
+        description: "An error occurred during login. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -119,8 +126,8 @@ export default function LoginPage() {
       // 성공 시 OAuth 콜백 페이지로 리다이렉트됨
     } catch (error) {
       toast({
-        title: "Google 로그인 실패",
-        description: "Google 로그인 중 오류가 발생했습니다. 다시 시도해주세요.",
+        title: "Google Login Failed",
+        description: "An error occurred during Google login. Please try again.",
         variant: "destructive",
       });
     } finally {

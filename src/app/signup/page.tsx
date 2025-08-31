@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
@@ -20,7 +20,14 @@ export default function SignupPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const router = useRouter();
   const { toast } = useToast();
-  const { signInWithGoogle } = useAuth();
+  const { signInWithGoogle, isAuthenticated, loading: authLoading } = useAuth();
+
+  // 이미 로그인된 사용자는 메인 페이지로 리다이렉션
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      router.replace("/");
+    }
+  }, [isAuthenticated, authLoading, router]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -36,30 +43,30 @@ export default function SignupPage() {
     const newErrors: Record<string, string> = {};
 
     if (!formData.username.trim()) {
-      newErrors.username = "사용자명을 입력해주세요.";
+      newErrors.username = "Please enter a username.";
     } else if (formData.username.length < 3) {
-      newErrors.username = "사용자명은 3자 이상이어야 합니다.";
+      newErrors.username = "Username must be at least 3 characters long.";
     } else if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
       newErrors.username =
-        "사용자명은 영문, 숫자, 언더스코어만 사용 가능합니다.";
+        "Username can only contain letters, numbers, and underscores.";
     }
 
     if (!formData.email.trim()) {
-      newErrors.email = "이메일을 입력해주세요.";
+      newErrors.email = "Please enter your email.";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "올바른 이메일 형식을 입력해주세요.";
+      newErrors.email = "Please enter a valid email format.";
     }
 
     if (!formData.password) {
-      newErrors.password = "비밀번호를 입력해주세요.";
+      newErrors.password = "Please enter your password.";
     } else if (formData.password.length < 6) {
-      newErrors.password = "비밀번호는 6자 이상이어야 합니다.";
+      newErrors.password = "Password must be at least 6 characters long.";
     }
 
     if (!formData.confirmPassword) {
-      newErrors.confirmPassword = "비밀번호 확인을 입력해주세요.";
+      newErrors.confirmPassword = "Please confirm your password.";
     } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "비밀번호가 일치하지 않습니다.";
+      newErrors.confirmPassword = "Passwords do not match.";
     }
 
     setErrors(newErrors);
@@ -85,15 +92,16 @@ export default function SignupPage() {
 
       if (usernameError) {
         toast({
-          title: "오류 발생",
-          description: "사용자명 중복 확인 중 오류가 발생했습니다.",
+          title: "Error Occurred",
+          description:
+            "An error occurred while checking username availability.",
           variant: "destructive",
         });
         return;
       }
 
       if (existingUsername) {
-        setErrors({ username: "이미 사용 중인 사용자명입니다." });
+        setErrors({ username: "Username is already taken." });
         return;
       }
 
@@ -106,15 +114,15 @@ export default function SignupPage() {
 
       if (emailError) {
         toast({
-          title: "오류 발생",
-          description: "이메일 중복 확인 중 오류가 발생했습니다.",
+          title: "Error Occurred",
+          description: "An error occurred while checking email availability.",
           variant: "destructive",
         });
         return;
       }
 
       if (existingEmail) {
-        setErrors({ email: "이미 사용 중인 이메일입니다." });
+        setErrors({ email: "Email is already in use." });
         return;
       }
 
@@ -131,7 +139,7 @@ export default function SignupPage() {
 
       if (authError) {
         toast({
-          title: "회원가입 실패",
+          title: "Signup Failed",
           description: authError.message,
           variant: "destructive",
         });
@@ -156,7 +164,7 @@ export default function SignupPage() {
 
         if (profileError) {
           toast({
-            title: "프로필 생성 실패",
+            title: "Profile Creation Failed",
             description: profileError.message,
             variant: "destructive",
           });
@@ -164,9 +172,9 @@ export default function SignupPage() {
         }
 
         toast({
-          title: "회원가입 완료! 🎉",
+          title: "Signup Complete! 🎉",
           description:
-            "TalkUvo에 오신 것을 환영합니다! 이메일 확인 메일을 확인해주세요.",
+            "Welcome to TalkUvo! Please check your email for verification.",
         });
 
         // 홈페이지로 리다이렉트
@@ -174,8 +182,8 @@ export default function SignupPage() {
       }
     } catch (error) {
       toast({
-        title: "오류 발생",
-        description: "회원가입 중 오류가 발생했습니다. 다시 시도해주세요.",
+        title: "Error Occurred",
+        description: "An error occurred during signup. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -190,9 +198,9 @@ export default function SignupPage() {
       // 성공 시 OAuth 콜백 페이지로 리다이렉트됨
     } catch (error) {
       toast({
-        title: "Google 회원가입 실패",
+        title: "Google Signup Failed",
         description:
-          "Google 회원가입 중 오류가 발생했습니다. 다시 시도해주세요.",
+          "An error occurred during Google signup. Please try again.",
         variant: "destructive",
       });
     } finally {
