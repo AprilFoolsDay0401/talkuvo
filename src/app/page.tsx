@@ -13,7 +13,7 @@ const mockCommunities = [
   {
     id: "1",
     name: "programming",
-    description: "프로그래밍에 관한 모든 것",
+    description: "Everything about programming",
     memberCount: 12500,
     postCount: 8900,
     avatarUrl: null,
@@ -21,7 +21,7 @@ const mockCommunities = [
   {
     id: "2",
     name: "korea",
-    description: "한국에 관한 이야기",
+    description: "Stories about Korea",
     memberCount: 8900,
     postCount: 5600,
     avatarUrl: null,
@@ -29,7 +29,7 @@ const mockCommunities = [
   {
     id: "3",
     name: "technology",
-    description: "최신 기술 트렌드",
+    description: "Latest technology trends",
     memberCount: 15600,
     postCount: 12300,
     avatarUrl: null,
@@ -37,7 +37,7 @@ const mockCommunities = [
   {
     id: "4",
     name: "food",
-    description: "맛있는 음식 이야기",
+    description: "Delicious food stories",
     memberCount: 7800,
     postCount: 4500,
     avatarUrl: null,
@@ -47,38 +47,38 @@ const mockCommunities = [
 const mockPosts = [
   {
     id: "1",
-    title: "Next.js 15의 새로운 기능들",
-    content: "Next.js 15에서 추가된 새로운 기능들을 정리해보았습니다...",
+    title: "New Features in Next.js 15",
+    content: "Here's a summary of the new features added in Next.js 15...",
     author: "dev_user",
     community: "programming",
     upvotes: 156,
     downvotes: 12,
     commentCount: 23,
-    createdAt: "2시간 전",
+    createdAt: "2 hours ago",
     postType: "text" as const,
   },
   {
     id: "2",
-    title: "한국의 전통 음식 문화",
-    content: "한국의 전통 음식 문화에 대해 알아보겠습니다...",
+    title: "Traditional Korean Food Culture",
+    content: "Let's explore traditional Korean food culture...",
     author: "foodie_kr",
     community: "food",
     upvotes: 89,
     downvotes: 5,
     commentCount: 15,
-    createdAt: "4시간 전",
+    createdAt: "4 hours ago",
     postType: "text" as const,
   },
   {
     id: "3",
-    title: "AI 기술의 미래",
-    content: "인공지능 기술이 우리 삶을 어떻게 바꿀 것인지...",
+    title: "The Future of AI Technology",
+    content: "How artificial intelligence technology will change our lives...",
     author: "tech_enthusiast",
     community: "technology",
     upvotes: 234,
     downvotes: 18,
     commentCount: 45,
-    createdAt: "6시간 전",
+    createdAt: "6 hours ago",
     postType: "text" as const,
   },
 ];
@@ -92,7 +92,7 @@ export default function HomePage() {
           <div className="bg-white rounded-lg border border-gray-200 p-4 sticky top-20">
             <h2 className="text-lg font-semibold mb-4 flex items-center">
               <TrendingUp className="w-5 h-5 mr-2 text-orange-500" />
-              인기 커뮤니티
+              Popular Communities
             </h2>
             <div className="space-y-3">
               {mockCommunities.map((community) => (
@@ -109,14 +109,14 @@ export default function HomePage() {
                       c/{community.name}
                     </p>
                     <p className="text-xs text-gray-500">
-                      {community.memberCount.toLocaleString()}명
+                      {community.memberCount.toLocaleString()} members
                     </p>
                   </div>
                 </Link>
               ))}
             </div>
             <Button className="w-full mt-4" variant="outline">
-              커뮤니티 더 보기
+              View More Communities
             </Button>
           </div>
         </div>
@@ -124,21 +124,21 @@ export default function HomePage() {
         {/* Main Content - 포스트 목록 */}
         <div className="lg:col-span-2">
           <div className="bg-white rounded-lg border border-gray-200">
-            {/* 포스트 생성 버튼 */}
+            {/* Post Creation Button */}
             <div className="p-4 border-b border-gray-200">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
                 <div className="flex-1">
                   <input
                     type="text"
-                    placeholder="무엇을 이야기하고 싶으신가요?"
+                    placeholder="What would you like to talk about?"
                     className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   />
                 </div>
               </div>
             </div>
 
-            {/* 포스트 목록 */}
+            {/* Post List */}
             <div className="divide-y divide-gray-200">
               {mockPosts.map((post) => (
                 <div
@@ -146,7 +146,7 @@ export default function HomePage() {
                   className="p-4 hover:bg-gray-50 transition-colors"
                 >
                   <div className="flex space-x-3">
-                    {/* 투표 버튼 */}
+                    {/* Voting Buttons */}
                     <div className="flex flex-col items-center space-y-1">
                       <button className="p-1 hover:bg-gray-100 rounded transition-colors">
                         <ArrowUp className="w-5 h-5 text-gray-400 hover:text-orange-500" />
@@ -159,7 +159,7 @@ export default function HomePage() {
                       </button>
                     </div>
 
-                    {/* 포스트 내용 */}
+                    {/* Post Content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center space-x-2 text-xs text-gray-500 mb-2">
                         <Link
@@ -187,14 +187,14 @@ export default function HomePage() {
                         <button className="flex items-center space-x-1 text-gray-500 hover:text-gray-700 transition-colors">
                           <MessageSquare className="w-4 h-4" />
                           <span className="text-sm">
-                            {post.commentCount} 댓글
+                            {post.commentCount} comments
                           </span>
                         </button>
                         <button className="text-gray-500 hover:text-gray-700 transition-colors text-sm">
-                          공유
+                          Share
                         </button>
                         <button className="text-gray-500 hover:text-gray-700 transition-colors text-sm">
-                          저장
+                          Save
                         </button>
                       </div>
                     </div>
@@ -205,32 +205,32 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Right Sidebar - 정보 및 광고 */}
+        {/* Right Sidebar - Information & Ads */}
         <div className="lg:col-span-1">
           <div className="bg-white rounded-lg border border-gray-200 p-4 sticky top-20">
-            <h3 className="text-lg font-semibold mb-4">TalkUvo 소개</h3>
+            <h3 className="text-lg font-semibold mb-4">About TalkUvo</h3>
             <p className="text-sm text-gray-600 mb-4">
-              TalkUvo는 다양한 주제에 대해 이야기하고 토론하는 커뮤니티
-              플랫폼입니다. 관심 있는 주제의 커뮤니티에 참여하고 의견을
-              나누어보세요.
+              TalkUvo is a community platform for discussing and debating
+              various topics. Join communities of interest and share your
+              opinions.
             </p>
 
             <div className="space-y-3">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">총 커뮤니티</span>
+                <span className="text-gray-600">Total Communities</span>
                 <span className="font-medium">1,234</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">총 사용자</span>
+                <span className="text-gray-600">Total Users</span>
                 <span className="font-medium">45,678</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">오늘 포스트</span>
+                <span className="text-gray-600">Today's Posts</span>
                 <span className="font-medium">567</span>
               </div>
             </div>
 
-            <Button className="w-full mt-4">커뮤니티 만들기</Button>
+            <Button className="w-full mt-4">Create Community</Button>
           </div>
         </div>
       </div>

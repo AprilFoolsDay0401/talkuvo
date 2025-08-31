@@ -6,11 +6,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/hooks/useToast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/Avatar";
-import { supabase } from "@/lib/supabase";
 import { ImageUpload } from "@/components/ui/ImageUpload";
+import { deleteImageFromStorage } from "@/lib/storage";
 
 export default function SettingsPage() {
-  const { user, profile, updateProfile, loading } = useAuth();
+  const { user, session, updateProfile, loading, isAuthenticated } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -23,24 +23,24 @@ export default function SettingsPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // 로그인하지 않은 사용자는 로그인 페이지로 리다이렉트
+  // Redirect unauthenticated users to login page
   useEffect(() => {
-    if (!loading && (!user || !profile)) {
+    if (!loading && !isAuthenticated) {
       router.push("/login");
     }
-  }, [user, profile, loading, router]);
+  }, [isAuthenticated, loading, router]);
 
-  // 프로필 데이터 로드
+  // Load profile data
   useEffect(() => {
-    if (profile) {
+    if (user) {
       setFormData({
-        username: profile.username || "",
-        full_name: profile.full_name || "",
-        bio: profile.bio || "",
-        avatar_url: profile.avatar_url || "",
+        username: user.username || "",
+        full_name: user.full_name || "",
+        bio: user.bio || "",
+        avatar_url: user.avatar_url || "",
       });
     }
-  }, [profile]);
+  }, [user]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -50,9 +50,9 @@ export default function SettingsPage() {
   };
 
   const handleImageUploaded = (imageUrl: string) => {
-    console.log("이미지 업로드 완료:", imageUrl);
+    console.log("Image upload completed:", imageUrl);
     setFormData((prev) => ({ ...prev, avatar_url: imageUrl }));
-    console.log("formData 업데이트됨:", { ...formData, avatar_url: imageUrl });
+    console.log("formData updated:", { ...formData, avatar_url: imageUrl });
   };
 
   const handleImageRemoved = () => {
@@ -63,47 +63,65 @@ export default function SettingsPage() {
     e.preventDefault();
     setSaving(true);
 
-    console.log("폼 제출 시작, 현재 formData:", formData);
+    console.log("Form submission started, current formData:", formData);
 
     try {
-      // 프로필 업데이트 (사용자명 제외)
+      // Check if image has changed (removed or replaced with different image)
+      if (user?.avatar_url && formData.avatar_url !== user.avatar_url) {
+        console.log(
+          "Image changed, attempting to delete old image from storage"
+        );
+        console.log("Old image:", user.avatar_url);
+        console.log("New image:", formData.avatar_url);
+
+        const deleteSuccess = await deleteImageFromStorage(user.avatar_url);
+        if (deleteSuccess) {
+          console.log("Successfully deleted old image from storage");
+        } else {
+          console.warn(
+            "Failed to delete old image from storage (profile update will continue)"
+          );
+        }
+      }
+
+      // Update profile (excluding username)
       const updateData = {
         full_name: formData.full_name,
         bio: formData.bio,
         avatar_url: formData.avatar_url,
       };
 
-      console.log("업데이트할 데이터:", updateData);
+      console.log("Data to update:", updateData);
 
       const result = await updateProfile(updateData);
 
-      console.log("updateProfile 결과:", result);
+      console.log("updateProfile result:", result);
 
       if (result.error) {
         console.error("프로필 업데이트 에러:", result.error);
         toast({
-          title: "프로필 업데이트 실패",
+          title: "Profile Update Failed",
           description: result.error.message,
           variant: "destructive",
         });
       } else {
-        console.log("프로필 업데이트 성공:", result.data);
+        console.log("Profile update successful:", result.data);
         toast({
-          title: "프로필 업데이트 성공!",
-          description: "프로필이 성공적으로 업데이트되었습니다.",
+          title: "Profile Updated Successfully!",
+          description: "Your profile has been updated successfully.",
         });
         setIsEditing(false);
 
-        // 프로필 업데이트 후 페이지 새로고침으로 헤더 아바타 업데이트
+        // Refresh page after profile update to update header avatar
         setTimeout(() => {
           window.location.reload();
         }, 1000);
       }
     } catch (error) {
-      console.error("handleSubmit 에러:", error);
+      console.error("handleSubmit error:", error);
       toast({
-        title: "오류 발생",
-        description: "프로필 업데이트 중 오류가 발생했습니다.",
+        title: "Error Occurred",
+        description: "An error occurred while updating your profile.",
         variant: "destructive",
       });
     } finally {
@@ -123,7 +141,7 @@ export default function SettingsPage() {
     );
   }
 
-  if (!user || !profile) {
+  if (!isAuthenticated || !user) {
     return null;
   }
 
@@ -131,9 +149,11 @@ export default function SettingsPage() {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-2xl mx-auto px-4">
         <div className="bg-white rounded-lg shadow p-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6">프로필 설정</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-6">
+            Profile Settings
+          </h1>
 
-          {/* 프로필 미리보기 */}
+          {/* Profile Preview */}
           <div className="mb-6 p-4 bg-gray-50 rounded-lg">
             <div className="flex items-center space-x-4">
               <Avatar className="w-16 h-16">
@@ -161,7 +181,7 @@ export default function SettingsPage() {
                 htmlFor="username"
                 className="block text-sm font-medium text-gray-700 mb-2"
               >
-                사용자명
+                Username
               </label>
               <div className="flex items-center">
                 <span className="text-gray-500 text-lg mr-2">@</span>
@@ -175,7 +195,7 @@ export default function SettingsPage() {
                 />
               </div>
               <p className="mt-1 text-xs text-gray-500">
-                사용자명은 변경할 수 없습니다
+                Username cannot be changed
               </p>
             </div>
 
@@ -185,7 +205,7 @@ export default function SettingsPage() {
                 htmlFor="full_name"
                 className="block text-sm font-medium text-gray-700 mb-2"
               >
-                실명
+                Full Name
               </label>
               <input
                 id="full_name"
@@ -196,7 +216,7 @@ export default function SettingsPage() {
                 disabled={!isEditing}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-500"
                 maxLength={50}
-                placeholder="실명을 입력하세요"
+                placeholder="Enter your full name"
               />
             </div>
 
@@ -206,7 +226,7 @@ export default function SettingsPage() {
                 htmlFor="bio"
                 className="block text-sm font-medium text-gray-700 mb-2"
               >
-                자기소개
+                Bio
               </label>
               <textarea
                 id="bio"
@@ -217,17 +237,17 @@ export default function SettingsPage() {
                 disabled={!isEditing}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-500"
                 maxLength={200}
-                placeholder="자기소개를 입력하세요"
+                placeholder="Tell us about yourself"
               />
               <p className="mt-1 text-xs text-gray-500">
-                {formData.bio.length}/200자
+                {formData.bio.length}/200 characters
               </p>
             </div>
 
             {/* 아바타 이미지 업로드 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                프로필 이미지
+                Profile Image
               </label>
               {isEditing ? (
                 <ImageUpload
@@ -249,13 +269,13 @@ export default function SettingsPage() {
                   </Avatar>
                   <div className="text-gray-500">
                     <p className="text-sm">
-                      편집 모드에서 이미지를 변경할 수 있습니다.
+                      You can change the image in edit mode.
                     </p>
                   </div>
                 </div>
               )}
               <p className="mt-1 text-xs text-gray-500">
-                JPEG, PNG, WebP 형식 • 최대 5MB
+                JPEG, PNG, WebP formats • Max 5MB
               </p>
             </div>
 
@@ -265,9 +285,12 @@ export default function SettingsPage() {
                 <Button
                   type="button"
                   onClick={() => setIsEditing(true)}
-                  className="bg-orange-500 hover:bg-orange-600"
+                  className="bg-orange-500 hover:bg-orange-600 relative overflow-hidden group cursor-pointer transition-all duration-300 ease-out hover:scale-105 hover:shadow-lg hover:shadow-orange-200 hover:border-orange-400 hover:text-orange-600 hover:bg-gradient-to-r hover:from-orange-50 hover:to-orange-100"
                 >
-                  편집하기
+                  <span className="relative z-10 transition-all duration-300 group-hover:text-orange-600">
+                    Edit
+                  </span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-orange-500 opacity-0 group-hover:opacity-10 transition-all duration-300 ease-out rounded-md"></div>
                 </Button>
               ) : (
                 <>
@@ -276,23 +299,30 @@ export default function SettingsPage() {
                     variant="outline"
                     onClick={() => {
                       setIsEditing(false);
-                      // 원래 데이터로 복원
+                      // Restore original data
                       setFormData({
-                        username: profile.username || "",
-                        full_name: profile.full_name || "",
-                        bio: profile.bio || "",
-                        avatar_url: profile.avatar_url || "",
+                        username: user.username || "",
+                        full_name: user.full_name || "",
+                        bio: user.bio || "",
+                        avatar_url: user.avatar_url || "",
                       });
                     }}
+                    className="relative overflow-hidden group cursor-pointer transition-all duration-300 ease-out hover:scale-105 hover:shadow-lg hover:shadow-gray-200 hover:border-gray-400 hover:text-gray-600 hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100"
                   >
-                    취소
+                    <span className="relative z-10 transition-all duration-300 group-hover:text-gray-600">
+                      Cancel
+                    </span>
+                    <div className="absolute inset-0 bg-gradient-to-r from-gray-400 to-gray-500 opacity-0 group-hover:opacity-10 transition-all duration-300 ease-out rounded-md"></div>
                   </Button>
                   <Button
                     type="submit"
                     disabled={saving}
-                    className="bg-orange-500 hover:bg-orange-600"
+                    className="bg-orange-500 hover:bg-orange-600 relative overflow-hidden group cursor-pointer transition-all duration-300 ease-out hover:scale-105 hover:shadow-lg hover:shadow-orange-200 hover:border-orange-400 hover:text-orange-600 hover:bg-gradient-to-r hover:from-orange-50 hover:to-orange-100 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {saving ? "저장 중..." : "저장하기"}
+                    <span className="relative z-10 transition-all duration-300 group-hover:text-orange-600">
+                      {saving ? "Saving..." : "Save"}
+                    </span>
+                    <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-orange-500 opacity-0 group-hover:opacity-10 transition-all duration-300 ease-out rounded-md"></div>
                   </Button>
                 </>
               )}

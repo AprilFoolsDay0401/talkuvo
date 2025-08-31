@@ -21,7 +21,7 @@ interface Profile {
 
 export default function UserProfilePage() {
   const params = useParams();
-  const { user: currentUser, profile: currentProfile } = useAuth();
+  const { user: currentUser } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -40,15 +40,15 @@ export default function UserProfilePage() {
 
         if (error) {
           if (error.code === "PGRST116") {
-            setError("사용자를 찾을 수 없습니다.");
+            setError("User not found.");
           } else {
-            setError("프로필을 불러오는 중 오류가 발생했습니다.");
+            setError("Error loading profile.");
           }
         } else {
           setProfile(data);
         }
       } catch (err) {
-        setError("프로필을 불러오는 중 오류가 발생했습니다.");
+        setError("Error loading profile.");
       } finally {
         setLoading(false);
       }
@@ -85,72 +85,75 @@ export default function UserProfilePage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            사용자를 찾을 수 없습니다
+            User Not Found
           </h1>
           <p className="text-gray-600 mb-6">{error}</p>
           <Link href="/">
-            <Button>홈으로 돌아가기</Button>
+            <Button>Back to Home</Button>
           </Link>
         </div>
       </div>
     );
   }
 
-  const isOwnProfile =
-    currentUser && currentProfile && currentProfile.username === username;
+  const isOwnProfile = currentUser && currentUser.username === username;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
+    <div className="min-h-screen bg-gray-50 py-4 sm:py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6">
         {/* 프로필 헤더 */}
         <div className="bg-white rounded-lg shadow mb-6 overflow-hidden">
           {/* 배너 이미지 (나중에 추가 가능) */}
-          <div className="h-32 bg-gradient-to-r from-orange-400 to-red-400"></div>
+          <div className="h-24 sm:h-32 bg-gradient-to-r from-orange-400 to-red-400"></div>
 
           {/* 프로필 정보 */}
-          <div className="relative px-6 pb-6">
+          <div className="relative px-4 sm:px-6 pb-4 sm:pb-6">
             {/* 아바타 */}
-            <div className="absolute -top-12 left-6">
-              <Avatar className="w-32 h-32 border-4 border-white shadow-lg">
+            <div className="absolute -top-8 sm:-top-12 left-4 sm:left-6">
+              <Avatar className="w-24 h-24 sm:w-32 sm:h-32 border-4 border-white shadow-lg">
                 <AvatarImage src={profile.avatar_url || undefined} />
-                <AvatarFallback className="bg-orange-500 text-white text-4xl font-bold">
+                <AvatarFallback className="bg-orange-500 text-white text-2xl sm:text-4xl font-bold">
                   {getInitials(profile.username)}
                 </AvatarFallback>
               </Avatar>
             </div>
 
             {/* 프로필 상세 정보 */}
-            <div className="ml-40 pt-4">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <div className="ml-28 sm:ml-40 pt-2 sm:pt-4">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between space-y-4 sm:space-y-0">
+                <div className="flex-1">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
                     {profile.full_name || profile.username}
                   </h1>
-                  <p className="text-xl text-gray-600 mb-2">
+                  <p className="text-lg sm:text-xl text-gray-600 mb-2">
                     @{profile.username}
                   </p>
                   {profile.bio && (
-                    <p className="text-gray-700 mb-4 max-w-2xl">
+                    <p className="text-gray-700 mb-4 max-w-2xl text-sm sm:text-base">
                       {profile.bio}
                     </p>
                   )}
                   <div className="flex items-center text-sm text-gray-500">
                     <Calendar className="w-4 h-4 mr-2" />
-                    <span>가입일: {formatDate(profile.created_at)}</span>
+                    <span>Joined: {formatDate(profile.created_at)}</span>
                   </div>
                 </div>
 
                 {/* 편집 버튼 (자신의 프로필인 경우) */}
                 {isOwnProfile && (
-                  <Link href="/settings">
-                    <Button
-                      variant="outline"
-                      className="flex items-center space-x-2"
-                    >
-                      <Edit className="w-4 h-4" />
-                      <span>프로필 편집</span>
-                    </Button>
-                  </Link>
+                  <div className="flex-shrink-0">
+                    <Link href="/settings">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center space-x-2 w-full sm:w-auto"
+                      >
+                        <Edit className="w-4 h-4" />
+                        <span className="hidden sm:inline">Edit Profile</span>
+                        <span className="sm:hidden">Edit</span>
+                      </Button>
+                    </Link>
+                  </div>
                 )}
               </div>
             </div>
@@ -158,34 +161,45 @@ export default function UserProfilePage() {
         </div>
 
         {/* 통계 및 활동 */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <div className="bg-white rounded-lg shadow p-6 text-center">
-            <div className="text-3xl font-bold text-orange-500 mb-2">0</div>
-            <div className="text-gray-600">포스트</div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6">
+          <div className="bg-white rounded-lg shadow p-4 sm:p-6 text-center">
+            <div className="text-2xl sm:text-3xl font-bold text-orange-500 mb-2">
+              0
+            </div>
+            <div className="text-sm sm:text-base text-gray-600">Posts</div>
           </div>
-          <div className="bg-white rounded-lg shadow p-6 text-center">
-            <div className="text-3xl font-bold text-blue-500 mb-2">0</div>
-            <div className="text-gray-600">댓글</div>
+          <div className="bg-white rounded-lg shadow p-4 sm:p-6 text-center">
+            <div className="text-2xl sm:text-3xl font-bold text-blue-500 mb-2">
+              0
+            </div>
+            <div className="text-sm sm:text-base text-gray-600">Comments</div>
           </div>
-          <div className="bg-white rounded-lg shadow p-6 text-center">
-            <div className="text-3xl font-bold text-green-500 mb-2">0</div>
-            <div className="text-gray-600">받은 좋아요</div>
+          <div className="bg-white rounded-lg shadow p-4 sm:p-6 text-center">
+            <div className="text-2xl sm:text-3xl font-bold text-green-500 mb-2">
+              0
+            </div>
+            <div className="text-sm sm:text-base text-gray-600">
+              Likes Received
+            </div>
           </div>
         </div>
 
         {/* 최근 활동 (나중에 구현) */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">
-            최근 활동
+        <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">
+            Recent Activity
           </h2>
-          <div className="text-center py-8 text-gray-500">
-            <MessageSquare className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-            <p>아직 활동이 없습니다.</p>
+          <div className="text-center py-6 sm:py-8 text-gray-500">
+            <MessageSquare className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-4 text-gray-300" />
+            <p className="text-sm sm:text-base">No activity yet.</p>
             {isOwnProfile && (
               <div className="mt-4">
                 <Link href="/create">
-                  <Button className="bg-orange-500 hover:bg-orange-600">
-                    첫 포스트 작성하기
+                  <Button
+                    size="sm"
+                    className="bg-orange-500 hover:bg-orange-600 w-full sm:w-auto"
+                  >
+                    Write Your First Post
                   </Button>
                 </Link>
               </div>

@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useAuth } from "@/contexts/AuthContext";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/Button";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/useToast";
 
 export default function LoginPage() {
@@ -19,6 +19,7 @@ export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
+  const { signInWithGoogle } = useAuth(); // AuthContext에서 Google 로그인 함수 가져오기
 
   // 회원가입 성공 메시지 표시
   const signupMessage = searchParams.get("message");
@@ -114,20 +115,7 @@ export default function LoginPage() {
     setGoogleLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-
-      if (error) {
-        toast({
-          title: "Google 로그인 실패",
-          description: error.message,
-          variant: "destructive",
-        });
-      }
+      await signInWithGoogle(); // AuthContext에서 가져온 함수 사용
       // 성공 시 OAuth 콜백 페이지로 리다이렉트됨
     } catch (error) {
       toast({
@@ -149,15 +137,15 @@ export default function LoginPage() {
           </div>
         </div>
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          TalkUvo에 로그인
+          Sign in to TalkUvo
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
-          또는{" "}
+          Or{" "}
           <Link
             href="/signup"
             className="font-medium text-orange-600 hover:text-orange-500 transition-colors"
           >
-            새 계정 만들기
+            create a new account
           </Link>
         </p>
       </div>
@@ -169,7 +157,7 @@ export default function LoginPage() {
             <Button
               onClick={handleGoogleLogin}
               variant="outline"
-              className="w-full flex justify-center items-center py-3 px-4 border-2 border-gray-200 hover:border-gray-300 transition-all duration-200"
+              className="w-full flex justify-center items-center py-3 px-4 border-2 border-gray-200 relative overflow-hidden group cursor-pointer transition-all duration-300 ease-out hover:scale-[1.02] hover:shadow-lg hover:shadow-gray-200 hover:border-gray-400 hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100"
               disabled={googleLoading}
             >
               {googleLoading ? (
@@ -194,7 +182,7 @@ export default function LoginPage() {
                   />
                 </svg>
               )}
-              {googleLoading ? "연결 중..." : "Google로 로그인"}
+              {googleLoading ? "Connecting..." : "Sign in with Google"}
             </Button>
           </div>
 
@@ -204,7 +192,7 @@ export default function LoginPage() {
             </div>
             <div className="relative flex justify-center text-sm">
               <span className="px-4 bg-white text-gray-500 font-medium">
-                또는 이메일로 로그인
+                Or sign in with email
               </span>
             </div>
           </div>
@@ -216,7 +204,7 @@ export default function LoginPage() {
                 htmlFor="email"
                 className="block text-sm font-semibold text-gray-700 mb-2"
               >
-                이메일 주소 *
+                Email Address *
               </label>
               <input
                 id="email"
@@ -226,7 +214,7 @@ export default function LoginPage() {
                 required
                 value={formData.email}
                 onChange={handleInputChange}
-                className={`w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all duration-200 ${
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all duration-200 ${
                   errors.email
                     ? "border-red-300 focus:border-red-500"
                     : "border-gray-300 focus:border-orange-500"
@@ -247,7 +235,7 @@ export default function LoginPage() {
                 htmlFor="password"
                 className="block text-sm font-semibold text-gray-700 mb-2"
               >
-                비밀번호 *
+                Password *
               </label>
               <input
                 id="password"
@@ -257,12 +245,12 @@ export default function LoginPage() {
                 required
                 value={formData.password}
                 onChange={handleInputChange}
-                className={`w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all duration-200 ${
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all duration-200 ${
                   errors.password
                     ? "border-red-300 focus:border-red-500"
                     : "border-gray-300 focus:border-orange-500"
                 }`}
-                placeholder="비밀번호를 입력하세요"
+                placeholder="Enter your password"
               />
               {errors.password && (
                 <p className="mt-1 text-sm text-red-600 flex items-center">
@@ -285,7 +273,7 @@ export default function LoginPage() {
                   htmlFor="remember-me"
                   className="ml-2 block text-sm text-gray-900"
                 >
-                  로그인 상태 유지
+                  Keep me signed in
                 </label>
               </div>
 
@@ -294,7 +282,7 @@ export default function LoginPage() {
                   href="#"
                   className="font-medium text-orange-600 hover:text-orange-500 transition-colors"
                 >
-                  비밀번호를 잊으셨나요?
+                  Forgot your password?
                 </a>
               </div>
             </div>
@@ -309,27 +297,40 @@ export default function LoginPage() {
                 {loading ? (
                   <>
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                    로그인 중...
+                    Signing in...
                   </>
                 ) : (
-                  "로그인"
+                  "Sign In"
                 )}
               </Button>
             </div>
           </form>
 
-          {/* 추가 정보 */}
+          {/* 회원가입 링크 */}
           <div className="mt-6 text-center">
+            <p className="text-sm text-gray-600">
+              Don't have an account?{" "}
+              <Link
+                href="/signup"
+                className="font-medium text-orange-600 hover:text-orange-500 transition-colors"
+              >
+                Sign up
+              </Link>
+            </p>
+          </div>
+
+          {/* 추가 정보 */}
+          <div className="mt-4 text-center">
             <p className="text-xs text-gray-500">
-              로그인하면 TalkUvo의 이용약관과 개인정보처리방침에 동의하는 것으로
-              간주됩니다.
+              By signing in, you agree to TalkUvo's Terms of Service and Privacy
+              Policy.
             </p>
           </div>
           <p className="text-xs text-gray-500 mt-2">
-            📧 회원가입 후 이메일 확인 메일이 발송됩니다
+            📧 A verification email will be sent after signup
           </p>
           <p className="text-xs text-gray-400 mt-1">
-            📱 모바일에서 로그인 문제가 있다면 브라우저 데이터를 지워보세요
+            📱 If you have login issues on mobile, try clearing browser data
           </p>
         </div>
       </div>
