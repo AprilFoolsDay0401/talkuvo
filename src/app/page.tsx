@@ -7,6 +7,7 @@ import {
   ArrowDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import JoinedCommunitiesSidebar from "@/components/JoinedCommunitiesSidebar";
 
 // 임시 데이터 (나중에 Supabase에서 가져올 예정)
 const mockCommunities = [
@@ -87,38 +88,9 @@ export default function HomePage() {
   return (
     <div className="max-w-6xl mx-auto">
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Left Sidebar - 커뮤니티 목록 */}
+        {/* Left Sidebar - Joined communities */}
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-lg border border-gray-200 p-4 sticky top-20">
-            <h2 className="text-lg font-semibold mb-4 flex items-center">
-              <TrendingUp className="w-5 h-5 mr-2 text-orange-500" />
-              Popular Communities
-            </h2>
-            <div className="space-y-3">
-              {mockCommunities.map((community) => (
-                <Link
-                  key={community.id}
-                  href={`/c/${community.name}`}
-                  className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                    {community.name[0].toUpperCase()}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      c/{community.name}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {community.memberCount.toLocaleString()} members
-                    </p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-            <Button className="w-full mt-4" variant="outline">
-              View More Communities
-            </Button>
-          </div>
+          <JoinedCommunitiesSidebar />
         </div>
 
         {/* Main Content - 포스트 목록 */}

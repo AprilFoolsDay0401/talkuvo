@@ -23,12 +23,12 @@ export default function CreatePostPage() {
   const [communities, setCommunities] = useState<Community[]>([]);
   const [loading, setLoading] = useState(false);
   const [communitiesLoading, setCommunitiesLoading] = useState(true);
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
 
   // 로그인하지 않은 사용자는 로그인 페이지로 리다이렉트
-  if (!user || !profile) {
+  if (!user) {
     router.push("/login");
     return null;
   }
