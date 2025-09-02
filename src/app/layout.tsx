@@ -8,8 +8,9 @@ import { AuthProvider } from "@/contexts/AuthContext";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "TalkUvo - 커뮤니티를 이야기하세요",
-  description: "다양한 주제에 대해 이야기하고 토론하는 커뮤니티 플랫폼",
+  title: "TalkUvo - Talk About Communities",
+  description:
+    "A community platform for discussing and debating various topics",
 };
 
 export default function RootLayout({

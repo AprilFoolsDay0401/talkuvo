@@ -21,7 +21,7 @@ interface Profile {
 
 export default function UserProfilePage() {
   const params = useParams();
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, loading: authLoading } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -54,10 +54,20 @@ export default function UserProfilePage() {
       }
     };
 
-    if (username) {
+    if (username && !authLoading) {
       fetchProfile();
+
+      // 안전장치: 10초 후에도 로딩이 안 끝나면 에러 처리
+      const timeoutId = setTimeout(() => {
+        if (loading) {
+          setError("Loading timeout. Please try again.");
+          setLoading(false);
+        }
+      }, 10000);
+
+      return () => clearTimeout(timeoutId);
     }
-  }, [username]);
+  }, [username, authLoading, loading]);
 
   const getInitials = (username: string) => {
     return username.slice(0, 2).toUpperCase();
@@ -72,10 +82,14 @@ export default function UserProfilePage() {
     });
   };
 
-  if (loading) {
+  // AuthContext가 아직 로딩 중이거나 프로파일을 가져오는 중일 때
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="w-8 h-8 bg-orange-500 rounded-full animate-spin"></div>
+        <div className="text-center">
+          <div className="w-8 h-8 bg-orange-500 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600 text-sm">Loading profile...</p>
+        </div>
       </div>
     );
   }

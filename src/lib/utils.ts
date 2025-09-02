@@ -34,3 +34,14 @@ export function formatNumber(num: number): string {
   }
   return num.toString();
 }
+
+// Converts a name to a URL-friendly slug: lowercase, hyphens, alphanumerics only
+export function slugify(input: string): string {
+  return input
+    .toLowerCase()
+    .trim()
+    .replace(/[_\s]+/g, "-") // spaces/underscores -> dash
+    .replace(/[^a-z0-9-]/g, "") // remove non-url-safe
+    .replace(/--+/g, "-") // collapse dashes
+    .replace(/^-+|-+$/g, ""); // trim dashes
+}
